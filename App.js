@@ -18,7 +18,7 @@ var selectedPhoto = 0;
 function LoginScreen({ navigation }) {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>User Login</Text>
+      <Text style={{fontSize: 20}}>User Login</Text>
       <TextInput
         style={styles.textInput}
         placeholder="Username"
@@ -89,7 +89,7 @@ function CameraScreen({}) {
 
     const {uri} = await camRef.current.takePictureAsync(options);
     const asset = await MediaLibrary.createAssetAsync(uri);
-    console.log(uri);
+    //console.log(uri);
     MediaLibrary.createAlbumAsync("ScrapChat", asset);
   };
 
@@ -108,15 +108,18 @@ function CameraScreen({}) {
 }
 
 function PhotosScreen() {
+  const [isLoading, setIsLoading] = useState(true);
   const [photo, setPhoto] = useState();
   
-  var hour = 1;
-  var minute = 1;
-  var day = 1;
-  var month = 1;
-  var year = 1;
-  var lat = 1;
-  var long = 1;
+  var hour = '10';
+  var minute = '56';
+  var day = '21';
+  var month = '03';
+  var year = '2023';
+  var lat = '55.9115688';
+  var long = '-3.3199448';
+
+  var message = '';
 
   let checkAlbum = async () => {
     const album = await MediaLibrary.getAlbumAsync("ScrapChat");
@@ -130,27 +133,43 @@ function PhotosScreen() {
         uriArray[i] = imageArray[i].uri;
       }
     }
+    setIsLoading(false);
   };
   let getInfo = async (num) => {
     selectedPhoto = num;
     setPhoto("Selected");
   };
-  if (photo) {
+
+  checkAlbum()
+  if (isLoading) {
     return (
-      <View>
-        <Image source={{ uri:  uriArray[selectedPhoto] }} style={{width: 400, height: 300,}}/>
-        <Text>Photo taken at:</Text>
-        <Text>{hour}:{minute}</Text>
-        <Text>{selectedPhoto}</Text>
-        <Button title="Upload"/>
-        <Button title="Back" onPress={() => setPhoto(undefined)} />
+      <View style={styles.container}>
+        <Text>Loading photos...</Text>
       </View>
     );
   }
-  checkAlbum()
+  if (photo) {
+    //console.log(uriArray[selectedPhoto]);
+    return (
+      <View style={{backgroundColor:  "white"}}>
+        <Image source={{ uri:  uriArray[selectedPhoto] }} style={{width: 400, height: 300,}}/>
+        <Text style={{fontSize: 20}}>   Photo taken at:</Text>
+        <Text style={{fontSize: 20}}>   {hour}:{minute}</Text>
+        <Text style={{fontSize: 20}}>   {day}-{month}-{year}</Text>
+        <Text style={{fontSize: 20}}>   Latitude: {lat}</Text>
+        <Text style={{fontSize: 20}}>   Longitude: {long}</Text>
+        <TouchableHighlight onPress={() => Alert.alert('Upload Photo','Photo successfully uploaded.')}>
+          <Image source={require('./assets/uploadbutton.png')}/>
+        </TouchableHighlight>
+        <TouchableHighlight onPress={() => setPhoto(undefined)}>
+          <Image source={require('./assets/backbutton.png')}/>
+        </TouchableHighlight>
+      </View>
+    );
+  }
   return (
-    <ScrollView >
-      <Text>Number of saved photos: {noOfPhotos}</Text>
+    <ScrollView style={{backgroundColor:  "white"}}>
+      <Text style={{fontSize: 20}}>   Number of saved photos: {noOfPhotos}</Text>
       <TouchableHighlight onPress={() => getInfo(0)}>
         <Image source={{ uri: uriArray[0], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
@@ -247,7 +266,7 @@ function App() {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS photos (name TEXT PRIMARY KEY NOT NULL, day INT, month INT, year INT, lat REAL, long REAL)"
+        "CREATE TABLE IF NOT EXISTS photos (path TEXT PRIMARY KEY NOT NULL, day INT, month INT, year INT, lat REAL, long REAL)"
       );
     });
   }, []);
