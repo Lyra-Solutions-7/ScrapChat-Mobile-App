@@ -11,6 +11,10 @@ import * as SQLite from "expo-sqlite";
 
 var noOfPhotos = 0;
 var uriArray = [];
+var timeArray = [];
+var dateArray = [];
+var latArray = [];
+var longArray = [];
 var selectedPhoto = 0;
 
 /* Screen Functions */
@@ -83,14 +87,29 @@ function CameraScreen({}) {
     var month = new Date().getMonth() + 1;
     var year = new Date().getFullYear();
 
+    if (hour < 10)
+      hour = '0' + hour;
+    if (minute < 10)
+      minute = '0' + minute;
+    if (day < 10)
+      day = '0' + day;
+    if (month < 10)
+      month = '0' + month;
+
+    var time = hour+':'+minute;
+    var date = day+'-'+month+'-'+year
+
     let location = await Location.getCurrentPositionAsync({});
     var lat = location.coords.latitude;
     var long = location.coords.longitude;
 
     const {uri} = await camRef.current.takePictureAsync(options);
     const asset = await MediaLibrary.createAssetAsync(uri);
-    //console.log(uri);
     MediaLibrary.createAlbumAsync("ScrapChat", asset);
+    timeArray.push(time);
+    dateArray.push(date);
+    latArray.push(lat);
+    longArray.push(long);
   };
 
   return (
@@ -110,14 +129,6 @@ function CameraScreen({}) {
 function PhotosScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [photo, setPhoto] = useState();
-  
-  var hour = '10';
-  var minute = '56';
-  var day = '21';
-  var month = '03';
-  var year = '2023';
-  var lat = '55.9115688';
-  var long = '-3.3199448';
 
   var message = '';
 
@@ -154,10 +165,10 @@ function PhotosScreen() {
       <View style={{backgroundColor:  "white"}}>
         <Image source={{ uri:  uriArray[selectedPhoto] }} style={{width: 400, height: 300,}}/>
         <Text style={{fontSize: 20}}>   Photo taken at:</Text>
-        <Text style={{fontSize: 20}}>   {hour}:{minute}</Text>
-        <Text style={{fontSize: 20}}>   {day}-{month}-{year}</Text>
-        <Text style={{fontSize: 20}}>   Latitude: {lat}</Text>
-        <Text style={{fontSize: 20}}>   Longitude: {long}</Text>
+        <Text style={{fontSize: 20}}>   {timeArray[selectedPhoto]}</Text>
+        <Text style={{fontSize: 20}}>   {dateArray[selectedPhoto]}</Text>
+        <Text style={{fontSize: 20}}>   Latitude: {latArray[selectedPhoto]}</Text>
+        <Text style={{fontSize: 20}}>   Longitude: {longArray[selectedPhoto]}</Text>
         <TouchableHighlight onPress={() => Alert.alert('Upload Photo','Photo successfully uploaded.')}>
           <Image source={require('./assets/uploadbutton.png')}/>
         </TouchableHighlight>
@@ -266,7 +277,7 @@ function App() {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS photos (path TEXT PRIMARY KEY NOT NULL, day INT, month INT, year INT, lat REAL, long REAL)"
+        "CREATE TABLE IF NOT EXISTS photos (path TEXT PRIMARY KEY NOT NULL, time TEXT, date TEXT, lat REAL, long REAL)"
       );
     });
   }, []);
