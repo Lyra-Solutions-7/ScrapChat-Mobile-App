@@ -1,15 +1,17 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Button, FlatList,Image, View, ScrollView,StyleSheet, Text, TextInput, TouchableHighlight } from 'react-native';
+import { Alert, Button, Image, View, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableHighlight } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Camera, CameraType } from 'expo-camera';
 import MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
+import * as SQLite from "expo-sqlite";
 
 var noOfPhotos = 0;
 var uriArray = [];
+var selectedPhoto = 0;
 
 /* Screen Functions */
 
@@ -84,13 +86,10 @@ function CameraScreen({}) {
     let location = await Location.getCurrentPositionAsync({});
     var lat = location.coords.latitude;
     var long = location.coords.longitude;
-    //var lat = 1;
-    //var long = 1;
 
-    Alert.alert('Photo taken at:', hour+':'+minute+', '+day+'-'+ month +'-'+ year +'\nLatitude: '+lat+
-    '\nLongitude: '+long);
     const {uri} = await camRef.current.takePictureAsync(options);
     const asset = await MediaLibrary.createAssetAsync(uri);
+    console.log(uri);
     MediaLibrary.createAlbumAsync("ScrapChat", asset);
   };
 
@@ -109,6 +108,16 @@ function CameraScreen({}) {
 }
 
 function PhotosScreen() {
+  const [photo, setPhoto] = useState();
+  
+  var hour = 1;
+  var minute = 1;
+  var day = 1;
+  var month = 1;
+  var year = 1;
+  var lat = 1;
+  var long = 1;
+
   let checkAlbum = async () => {
     const album = await MediaLibrary.getAlbumAsync("ScrapChat");
     if (album === null){
@@ -122,41 +131,54 @@ function PhotosScreen() {
       }
     }
   };
-  let showInfo = async () => {
-    Alert.alert("This is an image");
+  let getInfo = async (num) => {
+    selectedPhoto = num;
+    setPhoto("Selected");
   };
+  if (photo) {
+    return (
+      <View>
+        <Image source={{ uri:  uriArray[selectedPhoto] }} style={{width: 400, height: 300,}}/>
+        <Text>Photo taken at:</Text>
+        <Text>{hour}:{minute}</Text>
+        <Text>{selectedPhoto}</Text>
+        <Button title="Upload"/>
+        <Button title="Back" onPress={() => setPhoto(undefined)} />
+      </View>
+    );
+  }
   checkAlbum()
   return (
     <ScrollView >
       <Text>Number of saved photos: {noOfPhotos}</Text>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(0)}>
         <Image source={{ uri: uriArray[0], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(1)}>
         <Image source={{ uri: uriArray[1], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(2)}>
         <Image source={{ uri: uriArray[2], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(3)}>
         <Image source={{ uri: uriArray[3], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(4)}>
         <Image source={{ uri: uriArray[4], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(5)}>
         <Image source={{ uri: uriArray[5], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(6)}>
         <Image source={{ uri: uriArray[6], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(7)}>
         <Image source={{ uri: uriArray[7], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(8)}>
         <Image source={{ uri: uriArray[8], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => showInfo()}>
+      <TouchableHighlight onPress={() => getInfo(9)}>
         <Image source={{ uri: uriArray[9], isStatic: true,}} style={{width: 400, height: 300,}}/>
       </TouchableHighlight>
     </ScrollView>
@@ -205,34 +227,31 @@ function SettingsScreen() {
 const Stack = createNativeStackNavigator();
 
 function App() {
+  /* Handling permissions */
+  const [hasCameraPermission, setHasCameraPermission] = useState();
+  const [hasLocationPermission, setHasLocationPermission] = useState();
   const [hasMediaLibraryPermission, setHasMediaLibraryPermission] = useState();
+
   useEffect(() => {
     (async () => {
-      //const cameraPermission = await Camera.requestCameraPermissionsAsync();
+      const cameraPermission = await Camera.requestCameraPermissionsAsync();
+      const locationPermission = await Location.requestForegroundPermissionsAsync();
       const mediaLibraryPermission = await MediaLibrary.requestPermissionsAsync();
-      //setHasCameraPermission(cameraPermission.status === "granted");
+      setHasCameraPermission(cameraPermission.status === "granted");
+      setHasLocationPermission(locationPermission.status === "granted");
       setHasMediaLibraryPermission(mediaLibraryPermission.status === "granted");
     })();
   }, []);
 
-  
-  /*
-  const [cameraAllowed, requestCameraPermission] = Camera.useCameraPermissions();
-  const getLocationPermission = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      console.log("Please grant location permissions");
-      return;
-    }
-  }
-  getLocationPermission();
+  const db = SQLite.openDatabase("scrapchat.db");
+  useEffect(() => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "CREATE TABLE IF NOT EXISTS photos (name TEXT PRIMARY KEY NOT NULL, day INT, month INT, year INT, lat REAL, long REAL)"
+      );
+    });
+  }, []);
 
-  if (!cameraAllowed.granted==null) {
-    Alert.alert('Camera Permission', "Please allow ScrapChat to use your device's camera",
-    [{text:'Allow', onPress: () => requestCameraPermission}, {text: 'Dismiss'}]);
-  }
-
-  else {*/
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
@@ -274,7 +293,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
-
   container: {
     flex: 1,
     justifyContent: 'center',
