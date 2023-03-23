@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Image, View, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableHighlight } from 'react-native';
+import { Alert, Button, Image, View, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableHighlight, DrawerLayoutAndroid } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Camera, CameraType } from 'expo-camera';
@@ -10,12 +10,14 @@ import * as MediaLibrary from 'expo-media-library';
 import * as SQLite from "expo-sqlite";
 
 var noOfPhotos = 0;
+var selectedPhoto = 0;
 var uriArray = [];
 var timeArray = [];
 var dateArray = [];
 var latArray = [];
 var longArray = [];
-var selectedPhoto = 0;
+var areaLat = null;
+var areaLong = null;
 
 /* Screen Functions */
 
@@ -160,7 +162,6 @@ function PhotosScreen() {
     );
   }
   if (photo) {
-    //console.log(uriArray[selectedPhoto]);
     return (
       <View style={{backgroundColor:  "white"}}>
         <Image source={{ uri:  uriArray[selectedPhoto] }} style={{width: 400, height: 300,}}/>
@@ -225,15 +226,60 @@ function MapScreen() {
 }
 
 function ARViewScreen() {
+  const [area, setArea] = useState();
+  const [areaName, setAreaName] = useState('None');
+  const [currentArea, setCurrentArea] = useState('None');
   let ARcamRef = useRef();
 
+  let getArea = async () => {
+    let location = await Location.getCurrentPositionAsync({});
+    var dLat = Math.abs(areaLat - location.coords.latitude);
+    var dLong = Math.abs(areaLong - location.coords.longitude);
+    if (dLat < 0.001 && dLong < 0.001) {
+      setCurrentArea(areaName);
+    }
+  };
+
+  let addArea = async () => {
+    let location = await Location.getCurrentPositionAsync({});
+    areaLat = location.coords.latitude;
+    areaLong = location.coords.longitude;
+    setArea(undefined);
+  };
+
+  let clearArea = async () => {
+    setAreaName('None');
+    setArea(undefined);
+  };
+
+  if (area) {
+    return (
+      <View style={{backgroundColor:  "white"}}>
+        <Text style={{fontSize: 20}}>   Please enter the name of this AR-ea:</Text>
+        <TextInput style={styles.textInput} onChangeText={newText => setAreaName(newText)} placeholder="Area Name"/>
+        <TouchableHighlight onPress={() => addArea()}>
+          <Image source={require('./assets/addareabutton.png')}/>
+        </TouchableHighlight>
+        <TouchableHighlight onPress={() => clearArea()}>
+          <Image source={require('./assets/backbutton.png')}/>
+        </TouchableHighlight>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
+      <Text style={{fontSize: 30}}>   Current AR-ea:</Text>
+      <Text style={{fontSize: 30}}>   {currentArea}</Text>
       <Camera ref={ARcamRef} style={styles.camera} type={CameraType.back}>
-        <View>
-        <Button
-            title="Show Objects"
-          />
+        <View style={styles.takePictureButton}>
+        <Row>
+          <TouchableHighlight onPress={() => setArea("adding")}>
+            <Image source={require('./assets/areabutton.png')}/>
+          </TouchableHighlight>
+          <TouchableHighlight onPress={() => getArea()}>
+          <Image source={require('./assets/refreshbutton.png')}/>
+        </TouchableHighlight>
+        </Row>
         </View>
       </Camera>
     </View>

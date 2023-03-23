@@ -16,8 +16,8 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
-          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "photosPermission": "Allow ScrapChat to access your photos.",
+          "savePhotosPermission": "Allow ScrapChat to save photos.",
           "isAccessMediaLocationEnabled": true
         }
       ]
