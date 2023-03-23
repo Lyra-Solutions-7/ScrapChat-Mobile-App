@@ -238,6 +238,9 @@ function ARViewScreen() {
     if (dLat < 0.001 && dLong < 0.001) {
       setCurrentArea(areaName);
     }
+    else {
+      setCurrentArea('None');
+    }
   };
 
   let addArea = async () => {
